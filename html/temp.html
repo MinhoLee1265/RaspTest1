@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="//code.jquery.com/jquery-1.11.1.js"></script>
+    
+    <style>
+         
+      div{
+        text-align: center;
+      }
+      h1{
+        text-align: center;
+      }
+
+
+    </style>
+
+  </head>
+  <body>
+    <body>
+          <h1>LED 제어</h1>
+          <div>
+          <input type="button" id='on' value="On" onclick="led_on();">
+          <input type="button" id='off' value="Off" onclick="led_off();">
+          </div>
+    
+          <h1>Ridar 센서 로그</h1>
+          
+          <div id="temp_box" class="temp_log">
+          </div>
+
+        
+       
+    <script>
+      var socket = io();
+
+      socket.on('receive message', function(msg){
+        console.log("111");
+        msg = msg.replace(/\r/g, '');
+        if(msg!="" || msg!=null)
+        {
+          console.log(msg);
+          //$("#temp_box").append(`${msg} </br>`);  
+          $("#temp_box").text(`${msg} </br>`);  
+        }
+      });
+
+      
+      function led_on(){
+        console.log('on')
+        socket.emit('send message',"1");      
+      }
+      
+      function led_off(){
+        console.log('off')
+        socket.emit('send message',"0");      
+      }
+
+
+    </script>
+  </body>
+</html>

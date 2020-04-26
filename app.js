@@ -1,41 +1,99 @@
-var createError = require('http-errors');
 var express = require('express');
-var path = require('path');
-var cookieParser = require('cookie-parser');
-var logger = require('morgan');
-
-var indexRouter = require('./routes/index');
-var usersRouter = require('./routes/users');
-
 var app = express();
+var bodyParser = require('body-parser');
+var compression = require('compression')
+var indexRouter = require('./routes/index');
+var ridar = require('./routes/ridar');
 
-// view engine setup
-app.set('views', path.join(__dirname, 'views'));
-app.set('view engine', 'ejs');
+var http = require('http').Server(app);
+var io = require('socket.io')(http);
 
-app.use(logger('dev'));
-app.use(express.json());
-app.use(express.urlencoded({ extended: false }));
-app.use(cookieParser());
-app.use(express.static(path.join(__dirname, 'public')));
 
+const SerialPort = require('serialport');
+const Readline = SerialPort.parsers.Readline;
+const port = new SerialPort('/dev/ttyUSB0');
+const parser = new Readline();
+port.pipe(parser);
+
+
+//미들웨어
+app.use(express.static('public'));
+app.use(bodyParser.urlencoded({ extended: false }));
+app.use(compression());
+
+
+//라우트
 app.use('/', indexRouter);
-app.use('/users', usersRouter);
+app.use('/ridar', ridar);
 
-// catch 404 and forward to error handler
+
+parser.on('open', function() {
+//   port.write('1', function(err) {
+//     if (err) {
+//       return console.log('Error on write: ', err.message);
+//     }
+//     console.log('1 written');
+//   });
+});
+ 
+// open errors will be emitted as an error event
+parser.on('error', function(err) {
+  console.log('Error: ', err.message);
+})
+ 
+//연결이되면
+io.on('connection', function(socket){
+
+    var now_temp = "";
+    // var i = '0';
+    parser.on('data', function(data){
+        var vDate = new Date();
+        
+        if(data!="")
+            now_temp = vDate.toLocaleString() +" " + data;            
+            io.to(socket.id).emit('receive message',now_temp);
+            console.log(now_temp);
+            
+            // port.write(i.toString()+"\n");
+            // if(i.toString()=='0')
+            //   i=1;
+            // else
+            //   i=0;
+
+    });
+      //서버에서 받은 메세지.
+      socket.on('send message', function(text){
+        console.log(text + "1");
+        // parser.write(text);
+        port.write(text);
+      });
+
+    // console.log('user connected: ', socket.id);
+    // if(now_temp!="")
+    // {
+    // console.log(now_temp);
+    // io.to(socket.id).emit('receive message',now_temp);
+    // }
+   
+  //연결 실패하면 log 띄움.
+    socket.on('disconnect', function(){
+      console.log('user disconnected: ', socket.id);
+    });
+  
+  
+  });
+  
+
 app.use(function(req, res, next) {
-  next(createError(404));
+    res.status(404).send('Sorry cant find that!');
+  });
+  
+app.use(function (err, req, res, next) {
+   console.error(err.stack)
+   res.status(500).send('Something broke!')
 });
-
-// error handler
-app.use(function(err, req, res, next) {
-  // set locals, only providing error in development
-  res.locals.message = err.message;
-  res.locals.error = req.app.get('env') === 'development' ? err : {};
-
-  // render the error page
-  res.status(err.status || 500);
-  res.render('error');
-});
-
-module.exports = app;
+  
+http.listen(3000, function() {
+    console.log('Example app listening on port 3000!')
+  });
+  
