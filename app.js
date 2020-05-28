@@ -45,14 +45,16 @@ parser.on('error', function(err) {
 io.on('connection', function(socket){
 
     var now_temp = "";
+    var splitTest;
     // var i = '0';
     parser.on('data', function(data){
         var vDate = new Date();
         
         if(data!="")
-            now_temp = vDate.toLocaleString() +" " + data;            
-            io.to(socket.id).emit('receive message',now_temp);
-            console.log(now_temp);
+            now_temp = vDate.toLocaleString() +" " + data;                        
+            splitTest = data.split('/');
+            io.to(socket.id).emit('receive message',data);
+            console.log(splitTest[0] + "-" + splitTest[1]);
             
             // port.write(i.toString()+"\n");
             // if(i.toString()=='0')

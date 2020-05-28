@@ -25,28 +25,46 @@
           <input type="button" id='on' value="On" onclick="led_on();">
           <input type="button" id='off' value="Off" onclick="led_off();">
           </div> -->
-    
-          <h1>Ridar 센서 로그2</h1>
+
+          <br><br>
+          <h1>Ridar 센서 로그</h1>
           
           <h2><div id="temp_box" class="temp_log">
-          </div></h2>
-
-        
+          </div></h2>          
+          <br><br><br><br>
+          
+          <body>          
+            <h1><img id = "igg" alt = "My image"></h1>
+            
+          </body>
        
     <script>
       var socket = io();
+      var splitAry;
+      var msgNo;
+      var image = document.getElementById('igg');
 
       socket.on('receive message', function(msg){
         msg = msg.replace(/\r/g, '');
         if(msg!="" || msg!=null)
         {
-          //console.log(msg + "111");
           //$("#temp_box").append(`${msg} </br>`);  
-          $("#temp_box").text(`${msg}`);  
+          //$("#temp_box").text(`${msg}`);  
+          splitAry = msg.split('/');
+          msgNo  = parseInt(splitAry[0]);
+
+          $("#temp_box").text(`Distance : ${splitAry[0]} / strength : ${splitAry[1]}`); 
+          //$("#temp_box").append(`Distance : ${splitAry[0]} / strength : ${splitAry[1]}`);  
+
+          if(msgNo < 300){
+            image.src = "../Error.png";        
+          }
+          else
+            image.src = "../Check.png";
         }
       });
 
-      
+      /*
       function led_on(){
         console.log('on')
         socket.emit('send message',"1");      
@@ -56,7 +74,7 @@
         console.log('off')
         socket.emit('send message',"0");      
       }
-
+      */
 
     </script>
   </body>
